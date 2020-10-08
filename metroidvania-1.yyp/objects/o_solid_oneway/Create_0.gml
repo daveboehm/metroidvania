@@ -1,0 +1,2 @@
+currentSprite = noone;
+passThroughCondition = false;

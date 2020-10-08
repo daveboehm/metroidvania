@@ -1,4 +1,4 @@
-stateEngine = function(_obj) constructor {
+stateEnginer = function(_obj) constructor {
 	static setState = function(  ) { // player.walk
 		// set sprite to 'walk'
 		// set image idx to 0

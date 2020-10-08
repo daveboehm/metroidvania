@@ -29,7 +29,7 @@
   "overriddenProperties": [],
   "parent": {
     "name": "Projectiles",
-    "path": "folders/Objects/Projectiles.yy",
+    "path": "folders/Projectiles.yy",
   },
   "resourceVersion": "1.0",
   "name": "o_bullet_basic",

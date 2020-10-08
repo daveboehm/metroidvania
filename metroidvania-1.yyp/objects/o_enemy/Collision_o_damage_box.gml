@@ -1,4 +1,4 @@
-/// @description Enemy gets hit event
+/// @description Enemy gets hit event 
 if currentHealth <= 0 exit;
 
 if (!invincible) { 

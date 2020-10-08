@@ -22,7 +22,7 @@ invincibilityDuration = 0.1;
 bounceAmount = 2.3;
 shootCooldown = global.oneSecond*2;
 
-enum alarms {
+enum _alarms {
 	invincible,
 	shootCooldown
 };
@@ -30,7 +30,7 @@ enum alarms {
 state = new StateMachine("idle", 
 	"idle", {
 		enter: function() {
-			alarm[alarms.shootCooldown] = shootCooldown;
+			alarm[_alarms.shootCooldown] = shootCooldown;
 		},
 		step: function() {
 			if (withinDistance(o_dude, 250)) {
@@ -50,11 +50,11 @@ state = new StateMachine("idle",
 		enter: function() {
 			var bullet = instance_create_layer(x, y, "Instances", o_enemy_damage_entity);
 			o_enemy_damage_entity.sprite_index = s_blob_bullet;
-			bullet.direction = point_direction(x, y, lerp(bullet.x, o_dude.x, .3), lerp(bullet.y, o_dude.y, .3));
+			bullet.direction = point_direction(x, y, lerp(bullet.x, o_dude.x, .3), lerp(bullet.y, o_dude.y - 8, .3));
 			bullet.speed = 2;
 			bullet.damage = 1;
-			bullet.knockback = 5;
-			alarm[alarms.shootCooldown] = shootCooldown;
+			bullet.knockback = 3;
+			alarm[_alarms.shootCooldown] = shootCooldown;
 		},
 		step: function() {
 			setState("idle");
@@ -63,7 +63,7 @@ state = new StateMachine("idle",
 	"hit", {
 		enter: function() {
 			invincible = true;
-			alarm[alarms.invincible] = global.oneSecond * invincibilityDuration;
+			alarm[_alarms.invincible] = global.oneSecond * invincibilityDuration;
 			currentHealth -= other.damage;
 		},
 		step: function() {

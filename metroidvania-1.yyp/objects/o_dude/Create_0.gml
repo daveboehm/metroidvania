@@ -18,16 +18,7 @@ dir = 0;
 aimDir = 0;
 flip = 1;
 doubleJumpThreshold = 2.8;
-grapplingHook = {
-	startX: x + (3*flip),
-	startY: y - 8,
-	endX: x + 25*flip,
-	endY: y - 25,
-	chainLength: 0,
-	chainMaxLength: 100,
-	chainAngle: 0,
-	chainAngleVelocity: 0
-};
+
 invincible = false;
 invincibilityDuration = global.oneSecond*0.2;
 knockback = 15;
@@ -35,6 +26,44 @@ knockback = 15;
 // Room Changing
 nextRoom = noone;
 nextDoor = noone;
+
+grapplingHook = {
+	startX: x + (3*flip),
+	startY: y - 8,
+	endX: x + (5*flip),
+	endY: y - 15,		
+	chainLength: 5,
+	chainMaxLength: 100,
+	chainAngle: 0,
+	chainAngleVelocity: 0
+};
+			
+function throwGrapplingHook() {
+	grapplingHook = {
+		startX: x + (3*flip),
+		startY: y - 8,
+		endX: x,
+		endY: y,		
+		
+		chainLength: 5,
+		chainMaxLength: 80,
+		chainAngle: 0,
+		chainAngleVelocity: 0
+	};
+	var g = grapplingHook;
+	while !place_meeting(g.endX, g.endY+10, o_solid) && (g.chainLength < g.chainMaxLength) {
+		g.chainLength++;
+		var _end_x = lengthdir_x(g.chainLength * flip, aimDir);
+		var _end_y = lengthdir_y(g.chainLength, aimDir);
+		g.endX = g.startX + (_end_x * flip);
+		g.endY = g.startY + _end_y;
+	}
+
+	if place_meeting(g.endX, g.endY+10, o_solid) && (g.chainLength < g.chainMaxLength) {
+		g.chainAngleVelocity = 0;
+		setState("grapplingHook");
+	}
+}
 
 state = new StateMachine("idle",
 	"idle", {
@@ -247,9 +276,33 @@ state = new StateMachine("idle",
 			if (btn_A_released) {
 				vsp = 0;
 			}
+			if (btn_X_pressed) {
+				setState("airSpinAttack");
+			}
+			if (btn_Y_pressed) {	
+				throwGrapplingHook();
+			}
 			
 			if (vsp > doubleJumpThreshold) {
 				setState("fall");	
+			}
+		}
+	},
+	"airSpinAttack", {
+		enter: function() {
+			sprite_index = s_dude_air_spin_attack;
+			image_index = 0;
+			invincible = true;
+			currentFriction = airFriction;
+		},
+		step: function() {
+			basicMovement();
+			createAttackBox(s_damage_air_spin_attack, x, y, 1, 1, [o_enemy], 1, knockback);
+			if isFrame(image_number - 1) { 
+				hsp = 1.75 * flip;
+				invincible = false;
+				if vsp > 0 {				setState("fall"); }
+				else {						setState("idle"); }
 			}
 		}
 	},
@@ -266,11 +319,11 @@ state = new StateMachine("idle",
 					setState("doubleJump"); 
 				}
 				if (btn_X_pressed) {
-					setState("airAttack");
+					setState("airSpinAttack");
 				}
-				if (btn_Y_pressed) {					 
-					setState("grapplingHook"); 
-				}
+			}
+			if (btn_Y_pressed) {	
+				throwGrapplingHook();
 			}
 			if (btn_X_pressed) {						 
 				// setState("airSlamAttack");
@@ -305,6 +358,7 @@ state = new StateMachine("idle",
 			image_index = 0;
 			currentFriction = airFriction;
 			invincible = true;
+			game_set_speed(30, gamespeed_fps);
 		},
 		step: function() {
 			applyGravity(o_dude, o_solid, gravityRate, maxGravity);
@@ -314,52 +368,59 @@ state = new StateMachine("idle",
 				if vsp > 0 {				setState("fall"); }
 				else {						setState("idle"); }
 			}
+		},
+		leave: function() {
+			game_set_speed(60, gamespeed_fps);
 		}
 	},
 	"grapplingHook", {
 		enter: function() {
 			sprite_index = s_dude_grapple;
 			image_index = 0;
-			grapplingHook = {
-				startX: x + (3*flip),
-				startY: y - 8,
-				endX: x + 25*flip,
-				endY: y - 25,
-				chainLength: 0,
-				chainMaxLength: 100,
-				chainAngle: 0,
-				chainAngleVelocity: 0
-			};
-			alarm[0] = 30;
-			var g = grapplingHook;
-			var _end_x = 3;
-			var _end_y = 8;
-
-			
-			g.endX = g.startX - (_end_x * flip);
-			g.endY = g.startY + _end_y;
-
-			while !place_meeting(g.endX, g.startY, o_solid) && (g.chainLength < g.chainMaxLength) {
-				_end_x++;
-				_end_y++;
-				g.endX = g.startX + (_end_x * flip);
-				g.endY = g.startY - _end_y;
-				g.chainLength = point_distance(g.endX, g.endY, g.startX, g.startY);
-			}
-
-			if place_meeting(g.endX, g.endY, o_solid) && g.chainLength < g.chainMaxLength {
-				g.chainAngleVelocity = 0;
-				
-			} else {
-				setState("idle");
-			}
-			
 		},
 		step: function() {
-			basicMovement();
-			
+			var g = grapplingHook;
+			show_debug_message("start: "+ string(g.startY));
+			g.chainAngle = point_direction(g.endX, g.endY, g.startX, g.startY);
+			g.chainLength = point_distance(g.endX, g.endY, g.startX, g.startY);
+	
+			var _swing_speed = g.chainLength * .015;
+			_swing_speed = clamp(_swing_speed, .5, .65);
 
+			var _rope_angle_acceleration = -_swing_speed * dcos(g.chainAngle);
+			_rope_angle_acceleration += dir * 0.1;
+
+			g.chainAngleVelocity += _rope_angle_acceleration;
+			g.chainAngle += g.chainAngleVelocity;
+			g.chainAngleVelocity *= dir == 0 ? 0.95 : 1;
+			g.startX = g.endX + lengthdir_x(g.chainLength, g.chainAngle);
+			g.startY = g.endY + lengthdir_y(g.chainLength, g.chainAngle);
 			
+			show_debug_message("end: "+ string(g.startY));
+
+			hsp = g.startX - x;
+			vsp = g.startY - y + 8; 
+
+			if !place_meeting(o_dude.x + hsp, o_dude.y + vsp, o_solid) {
+				o_dude.x += hsp;
+				o_dude.y += vsp;
+			} else {
+				setState("fall");
+			}
+
+
+			if (btn_Y_released) {
+				var _momentum = 2*flip;
+	
+				if (vsp < .5) {	
+					vsp += jumpHeight/1.5;
+					hsp += _momentum;
+					setState("jump");
+				}
+
+				setState("fall");
+			}
+
 		}
 	}
 );

@@ -74,12 +74,12 @@ function moveToward(_target, _speed, _collisionObj) {
 	flip = hDir != 0 ? hDir : flip;
 	
 	if (place_meeting(x+_speed*hDir, y, _collisionObj)) {
-		while !place_meeting(x + sign(hsp), y, _collisionObj) { x += sign(hsp); }
+		// while !place_meeting(x + sign(hsp), y, _collisionObj) { x += sign(hsp); }
 		hsp = 0;
 	}
 	
 	if (place_meeting(x, y+_speed*vDir, _collisionObj)) {
-		while !place_meeting(x, y + sign(vsp), _collisionObj) { y += sign(vsp); }
+		//while !place_meeting(x, y + sign(vsp), _collisionObj) { y += sign(vsp); }
 		vsp = 0;
 	}
 	x += hsp;

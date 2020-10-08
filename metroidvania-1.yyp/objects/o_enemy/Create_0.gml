@@ -14,4 +14,3 @@ gravityMax = global.gravityMax;
 invincible = false;
 invincibilityDuration = 0.5; // In Seconds
 bounceAmount = 1.2;
-

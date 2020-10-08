@@ -24,8 +24,8 @@
   "properties": [],
   "overriddenProperties": [],
   "parent": {
-    "name": "Environment",
-    "path": "folders/Environment.yy",
+    "name": "Solids",
+    "path": "folders/Environment/Solids.yy",
   },
   "resourceVersion": "1.0",
   "name": "o_solid",
